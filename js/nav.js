@@ -1,28 +1,24 @@
-/* nav.js + main.js — dawarzada.ca */
-
 (function () {
   'use strict';
 
   /* ---- NAV SCROLL ---- */
   const nav = document.querySelector('.site-nav');
   if (nav) {
-    const onScroll = () => {
-      nav.classList.toggle('scrolled', window.scrollY > 40);
-    };
+    const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 40);
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
   }
 
-  /* ---- ACTIVE NAV LINK ---- */
-  const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+  /* ---- ACTIVE LINK ---- */
+  const currentPage = window.location.pathname.split('/').pop() || 'index.html';
   document.querySelectorAll('.nav-links a, .nav-drawer a').forEach(a => {
-    const href = a.getAttribute('href');
-    if (href === currentPath || (currentPath === '' && href === 'index.html')) {
+    const href = (a.getAttribute('href') || '').split('#')[0];
+    if (href === currentPage || (currentPage === '' && href === 'index.html')) {
       a.classList.add('active');
     }
   });
 
-  /* ---- MOBILE HAMBURGER ---- */
+  /* ---- HAMBURGER ---- */
   const hamburger = document.querySelector('.nav-hamburger');
   const drawer = document.querySelector('.nav-drawer');
   if (hamburger && drawer) {
@@ -38,43 +34,26 @@
         spans.forEach(s => { s.style.transform = ''; s.style.opacity = ''; });
       }
     });
-    // close on drawer link click
-    drawer.querySelectorAll('a').forEach(a => {
-      a.addEventListener('click', () => {
-        drawer.classList.remove('open');
-        hamburger.setAttribute('aria-expanded', false);
-        hamburger.querySelectorAll('span').forEach(s => { s.style.transform = ''; s.style.opacity = ''; });
-      });
-    });
+    drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+      drawer.classList.remove('open');
+      hamburger.setAttribute('aria-expanded', false);
+      hamburger.querySelectorAll('span').forEach(s => { s.style.transform = ''; s.style.opacity = ''; });
+    }));
   }
 
   /* ---- SCROLL REVEAL ---- */
-  const revealElements = document.querySelectorAll('.reveal');
-  if (revealElements.length > 0) {
-    // Gate behind class to prevent flash
-    const applyReady = () => document.body.classList.add('js-reveal-ready');
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', applyReady);
-    } else {
-      applyReady();
-    }
-    // Fallback: ensure visible after timeout
-    setTimeout(() => {
-      revealElements.forEach(el => el.classList.add('visible'));
-    }, 1800);
-
+  const revealEls = document.querySelectorAll('.reveal');
+  if (revealEls.length) {
+    const ready = () => document.body.classList.add('js-reveal-ready');
+    document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', ready) : ready();
+    setTimeout(() => revealEls.forEach(el => el.classList.add('visible')), 1800);
     if ('IntersectionObserver' in window) {
-      const obs = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-            obs.unobserve(entry.target);
-          }
-        });
-      }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-      revealElements.forEach(el => obs.observe(el));
+      const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+      }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+      revealEls.forEach(el => obs.observe(el));
     } else {
-      revealElements.forEach(el => el.classList.add('visible'));
+      revealEls.forEach(el => el.classList.add('visible'));
     }
   }
 
@@ -83,12 +62,8 @@
     const parts = el.getAttribute('data-email').split('|');
     if (parts.length === 2) {
       const addr = parts[0] + '@' + parts[1];
-      if (el.tagName === 'A') {
-        el.href = 'mailto:' + addr;
-        if (!el.textContent.trim()) el.textContent = addr;
-      } else {
-        el.textContent = addr;
-      }
+      if (el.tagName === 'A') { el.href = 'mailto:' + addr; if (!el.textContent.trim()) el.textContent = addr; }
+      else el.textContent = addr;
     }
   });
 
